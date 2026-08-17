@@ -31,6 +31,12 @@ The only dependency is web browser, that should future proof it.
 
 [Unit tests](https://kubabuda.github.io/EEPROM_generator/tests.html) are using [Jasmine](https://jasmine.github.io). 
 
+They can also be run without a browser:
+
+```bash
+node test-node.js
+```
+
 ## OD structure
 
 OD is keept as JSON object. Expected data format:

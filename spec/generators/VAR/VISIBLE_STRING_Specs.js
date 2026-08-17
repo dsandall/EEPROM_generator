@@ -623,7 +623,7 @@ extern _Objects Obj;
                 </SubItem>
               </DataType>
               <DataType>
-                <Name>DT1400</Name>
+                <Name>DT1600</Name>
                 <BitSize>48</BitSize>
                 <SubItem>
                   <SubIdx>0</SubIdx>
@@ -824,9 +824,9 @@ extern _Objects Obj;
                 </Flags>
               </Object>
               <Object>
-                <Index>#x1400</Index>
+                <Index>#x1600</Index>
                 <Name>News</Name>
-                <Type>DT1400</Type>
+                <Type>DT1600</Type>
                 <BitSize>48</BitSize>
                 <Info>
                   <SubItem>
@@ -902,7 +902,7 @@ extern _Objects Obj;
                   <SubItem>
                     <Name>PDO Mapping</Name>
                     <Info>
-                      <DefaultValue>#x1400</DefaultValue>
+                      <DefaultValue>#x1600</DefaultValue>
                     </Info>
                   </SubItem>
                 </Info>
@@ -934,7 +934,7 @@ extern _Objects Obj;
         <Sm StartAddress="#x1400" ControlByte="#x24" Enable="1">Outputs</Sm>
         <Sm StartAddress="#x1A00" ControlByte="#x20" Enable="0">Inputs</Sm>
         <RxPdo Fixed="true" Mandatory="true" Sm="2">
-          <Index>#x1400</Index>
+          <Index>#x1600</Index>
           <Name>News</Name>
           <Entry>
             <Index>#x7000</Index>
@@ -1043,9 +1043,9 @@ static const char acName1018_01[] = "Vendor ID";
 static const char acName1018_02[] = "Product Code";
 static const char acName1018_03[] = "Revision Number";
 static const char acName1018_04[] = "Serial Number";
-static const char acName1400[] = "News";
-static const char acName1400_00[] = "Max SubIndex";
-static const char acName1400_01[] = "News";
+static const char acName1600[] = "News";
+static const char acName1600_00[] = "Max SubIndex";
+static const char acName1600_01[] = "News";
 static const char acName1C00[] = "Sync Manager Communication Type";
 static const char acName1C00_00[] = "Max SubIndex";
 static const char acName1C00_01[] = "Communications Type SM0";
@@ -1081,10 +1081,10 @@ const _objd SDO1018[] =
   {0x03, DTYPE_UNSIGNED32, 32, ATYPE_RO, acName1018_03, 2, NULL},
   {0x04, DTYPE_UNSIGNED32, 32, ATYPE_RO, acName1018_04, 1, &Obj.serial},
 };
-const _objd SDO1400[] =
+const _objd SDO1600[] =
 {
-  {0x00, DTYPE_UNSIGNED8, 8, ATYPE_RO, acName1400_00, 1, NULL},
-  {0x01, DTYPE_UNSIGNED32, 32, ATYPE_RO, acName1400_01, 0x70000028, NULL},
+  {0x00, DTYPE_UNSIGNED8, 8, ATYPE_RO, acName1600_00, 1, NULL},
+  {0x01, DTYPE_UNSIGNED32, 32, ATYPE_RO, acName1600_01, 0x70000028, NULL},
 };
 const _objd SDO1C00[] =
 {
@@ -1097,7 +1097,7 @@ const _objd SDO1C00[] =
 const _objd SDO1C12[] =
 {
   {0x00, DTYPE_UNSIGNED8, 8, ATYPE_RO, acName1C12_00, 1, NULL},
-  {0x01, DTYPE_UNSIGNED16, 16, ATYPE_RO, acName1C12_01, 0x1400, NULL},
+  {0x01, DTYPE_UNSIGNED16, 16, ATYPE_RO, acName1C12_01, 0x1600, NULL},
 };
 const _objd SDO7000[] =
 {
@@ -1111,7 +1111,7 @@ const _objectlist SDOobjects[] =
   {0x1009, OTYPE_VAR, 0, 0, acName1009, SDO1009},
   {0x100A, OTYPE_VAR, 0, 0, acName100A, SDO100A},
   {0x1018, OTYPE_RECORD, 4, 0, acName1018, SDO1018},
-  {0x1400, OTYPE_RECORD, 1, 0, acName1400, SDO1400},
+  {0x1600, OTYPE_RECORD, 1, 0, acName1600, SDO1600},
   {0x1C00, OTYPE_ARRAY, 4, 0, acName1C00, SDO1C00},
   {0x1C12, OTYPE_ARRAY, 1, 0, acName1C12, SDO1C12},
   {0x7000, OTYPE_VAR, 0, 0, acName7000, SDO7000},

@@ -65,4 +65,3 @@ function getEmptyFrom() {
         Reset: { name: "Reset", },
     }
 }
-  

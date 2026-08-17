@@ -13,7 +13,7 @@
 
 // ####################### EEPROM generating ####################### //
 
-function hex_generator(form, stringOnly=false)
+function hex_generator(form, stringOnly=false, od=null)
 {
 	//WORD ADDRESS 0-7
 	let record = getConfigDataBytes(form);
@@ -128,9 +128,16 @@ function hex_generator(form, stringOnly=false)
 	//FMMU
 	offset = writeFMMU(form,offset, record); //see Table 22 ETG1000.6
 	//SyncManagers
-	offset = writeSyncManagers(form, offset, record); //See Table 23 ETG1000.6
+	const rxPdos = getPdoDescriptions(od, '1C12', 2);
+	const txPdos = getPdoDescriptions(od, '1C13', 3);
+	offset = writeSyncManagers(form, offset, record, rxPdos, txPdos); //See Table 23 ETG1000.6
+	if (od) {
+		offset = writePdoCategory(0x32, txPdos, offset, record); // TxPDO
+		offset = writePdoCategory(0x33, rxPdos, offset, record); // RxPDO
+		writeEEPROMword_wordaddress(0xFFFF, offset / 2, record);
+		writeEEPROMword_wordaddress(0x0000, (offset / 2) + 1, record);
+	}
 	//End of EEPROM contents
-	const eepromSize = getForm().EEPROMsize.value;
 	
 	return record;
 	
@@ -221,7 +228,7 @@ function hex_generator(form, stringOnly=false)
 		return offset;
 	}
 	/** See Table 23 ETG1000.6 */
-	function writeSyncManagers(form, offset, record)
+	function writeSyncManagers(form, offset, record, rxPdos, txPdos)
 	{
 		const SyncManager_category = 0x29 // 41d
 		writeEEPROMword_wordaddress(SyncManager_category, offset/2, record); //SyncManager
@@ -249,7 +256,7 @@ function hex_generator(form, stringOnly=false)
 		//SM2
 		writeEEPROMword_wordaddress(parseInt(form.SM2Offset.value),offset/2, record); //Physical start address
 		offset += 2;
-		writeEEPROMword_wordaddress(0,offset/2, record); //Physical size
+		writeEEPROMword_wordaddress(getPdoByteSize(rxPdos),offset/2, record); //Physical size
 		offset += 2;
 		writeEEPROMbyte_byteaddress(0x24,offset++, record); //Mode of operation
 		writeEEPROMbyte_byteaddress(0,offset++, record); //don't care
@@ -258,12 +265,133 @@ function hex_generator(form, stringOnly=false)
 		//SM3
 		writeEEPROMword_wordaddress(parseInt(form.SM3Offset.value),offset/2, record); //Physical start address
 		offset += 2;
-		writeEEPROMword_wordaddress(0,offset/2, record); //Physical size
+		writeEEPROMword_wordaddress(getPdoByteSize(txPdos),offset/2, record); //Physical size
 		offset += 2;
 		writeEEPROMbyte_byteaddress(0x20,offset++, record); //Mode of operation
 		writeEEPROMbyte_byteaddress(0,offset++, record); //don't care
 		writeEEPROMbyte_byteaddress(1,offset++, record); //Enable Syncmanager; bit0: enable, bit 1: fixed content, bit 2: virtual SyncManager, bit 3: Op Only
 		writeEEPROMbyte_byteaddress(4,offset++, record); //SyncManagerType; 0: not used, 1: Mbx out, 2: Mbx In, 3: PDO, 4: PDI
+		return offset;
+	}
+
+	/** Build the SII PDO category model from the generated CoE dictionary. */
+	function getPdoDescriptions(od, assignmentIndex, syncManager)
+	{
+		if (!od || !od[assignmentIndex]) {
+			return [];
+		}
+
+		return od[assignmentIndex].items.slice(1).map(assignment => {
+			const index = parseInt(assignment.value);
+			const mapping = od[indexToString(index)];
+			if (!mapping) {
+				throw new Error(`PDO assignment 0x${assignmentIndex} references missing object 0x${indexToString(index)}`);
+			}
+			return {
+				index: index,
+				syncManager: syncManager,
+				entries: mapping.items.slice(1).map(item => getPdoEntry(od, item.value)),
+			};
+		});
+	}
+
+	function getPdoEntry(od, mappingValue)
+	{
+		const value = parseInt(mappingValue);
+		const index = (value >>> 16) & 0xFFFF;
+		const subindex = (value >>> 8) & 0xFF;
+		const bitLength = value & 0xFF;
+
+		if (index == 0) {
+			return { index, subindex, bitLength, dataType: 0 };
+		}
+
+		const object = od[indexToString(index)];
+		if (!object) {
+			throw new Error(`PDO mapping references missing object 0x${indexToString(index)}`);
+		}
+
+		let dtype = object.dtype;
+		if (object.otype != OTYPE.VAR) {
+			const subitem = object.items[subindex];
+			if (!subitem) {
+				throw new Error(`PDO mapping references missing object 0x${indexToString(index)}:${subindex}`);
+			}
+			dtype = subitem.dtype || object.dtype;
+		}
+
+		return { index, subindex, bitLength, dataType: getSiiDataType(dtype) };
+	}
+
+	function getSiiDataType(dtype)
+	{
+		const dataTypes = {
+			BOOLEAN: 0x01,
+			INTEGER8: 0x02,
+			INTEGER16: 0x03,
+			INTEGER32: 0x04,
+			UNSIGNED8: 0x05,
+			UNSIGNED16: 0x06,
+			UNSIGNED32: 0x07,
+			REAL32: 0x08,
+			VISIBLE_STRING: 0x09,
+			REAL64: 0x11,
+			INTEGER64: 0x15,
+			UNSIGNED64: 0x1B,
+		};
+		const value = dataTypes[dtype];
+		if (value == undefined) {
+			throw new Error(`Unsupported SII PDO data type ${dtype}`);
+		}
+		return value;
+	}
+
+	function getPdoByteSize(pdos)
+	{
+		const bits = pdos.reduce((total, pdo) =>
+			total + pdo.entries.reduce((pdoTotal, entry) => pdoTotal + entry.bitLength, 0), 0);
+		return Math.ceil(bits / 8);
+	}
+
+	/** See ETG1000.6 PDO category definitions. */
+	function writePdoCategory(category, pdos, offset, record)
+	{
+		if (!pdos.length) {
+			return offset;
+		}
+
+		const categorySize = 4 + pdos.reduce((size, pdo) => size + 8 + (pdo.entries.length * 8), 0);
+		if (offset + categorySize + 4 > record.length) {
+			throw new Error(`EEPROM size ${record.length} is too small for generated SII categories`);
+		}
+
+		const categoryStart = offset;
+		writeEEPROMword_wordaddress(category, offset / 2, record);
+		offset += 4; // reserve category type and length
+
+		pdos.forEach(pdo => {
+			writeEEPROMword_wordaddress(pdo.index, offset / 2, record);
+			offset += 2;
+			writeEEPROMbyte_byteaddress(pdo.entries.length, offset++, record);
+			writeEEPROMbyte_byteaddress(pdo.syncManager, offset++, record);
+			writeEEPROMbyte_byteaddress(0, offset++, record); // DC Sync
+			writeEEPROMbyte_byteaddress(0, offset++, record); // name string index
+			writeEEPROMword_wordaddress(0, offset / 2, record); // flags
+			offset += 2;
+
+			pdo.entries.forEach(entry => {
+				writeEEPROMword_wordaddress(entry.index, offset / 2, record);
+				offset += 2;
+				writeEEPROMbyte_byteaddress(entry.subindex, offset++, record);
+				writeEEPROMbyte_byteaddress(0, offset++, record); // name string index
+				writeEEPROMbyte_byteaddress(entry.dataType, offset++, record);
+				writeEEPROMbyte_byteaddress(entry.bitLength, offset++, record);
+				writeEEPROMword_wordaddress(0, offset / 2, record); // flags
+				offset += 2;
+			});
+		});
+
+		writeEEPROMword_wordaddress((offset - categoryStart - 4) / 2, (categoryStart / 2) + 1, record);
 		return offset;
 	}
 	function getCOEdetails(form)

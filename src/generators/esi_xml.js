@@ -183,7 +183,7 @@ function esi_generator(form, od, indexes, dc)
 	//Add SM3
 	esi += `        <Sm StartAddress="#x${indexToString(form.SM3Offset.value)}" ControlByte="#x20" Enable="${is_txpdo ? 1 : 0}">Inputs</Sm>\n`;
 	if (is_rxpdo) {
-		let memOffset = getSM2_MappingOffset(form);
+		let memOffset = getRxPdoMappingOffset(form);
 		indexes.forEach(index => {
 			const objd = od[index];
 			
@@ -194,7 +194,7 @@ function esi_generator(form, od, indexes, dc)
 		});
 	}
 	if (is_txpdo) {
-		let memOffset = form.SM3Offset.value;
+		let memOffset = getTxPdoMappingOffset(form);
 		indexes.forEach(index => {
 			const objd = od[index];
 			if (isInArray(objd.pdo_mappings, txpdo)) {

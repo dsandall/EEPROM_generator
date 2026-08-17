@@ -383,7 +383,7 @@ const esi_xml =
                 </SubItem>
               </DataType>
               <DataType>
-                <Name>DT1400</Name>
+                <Name>DT1600</Name>
                 <BitSize>48</BitSize>
                 <SubItem>
                   <SubIdx>0</SubIdx>
@@ -407,7 +407,7 @@ const esi_xml =
                 </SubItem>
               </DataType>
               <DataType>
-                <Name>DT1401</Name>
+                <Name>DT1601</Name>
                 <BitSize>48</BitSize>
                 <SubItem>
                   <SubIdx>0</SubIdx>
@@ -861,9 +861,9 @@ const esi_xml =
                 </Flags>
               </Object>
               <Object>
-                <Index>#x1400</Index>
+                <Index>#x1600</Index>
                 <Name>Control Word</Name>
-                <Type>DT1400</Type>
+                <Type>DT1600</Type>
                 <BitSize>48</BitSize>
                 <Info>
                   <SubItem>
@@ -884,9 +884,9 @@ const esi_xml =
                 </Flags>
               </Object>
               <Object>
-                <Index>#x1401</Index>
+                <Index>#x1601</Index>
                 <Name>Target position</Name>
-                <Type>DT1401</Type>
+                <Type>DT1601</Type>
                 <BitSize>48</BitSize>
                 <Info>
                   <SubItem>
@@ -1008,13 +1008,13 @@ const esi_xml =
                   <SubItem>
                     <Name>PDO Mapping</Name>
                     <Info>
-                      <DefaultValue>#x1400</DefaultValue>
+                      <DefaultValue>#x1600</DefaultValue>
                     </Info>
                   </SubItem>
                   <SubItem>
                     <Name>PDO Mapping</Name>
                     <Info>
-                      <DefaultValue>#x1401</DefaultValue>
+                      <DefaultValue>#x1601</DefaultValue>
                     </Info>
                   </SubItem>
                 </Info>
@@ -1244,7 +1244,7 @@ const esi_xml =
         <Sm StartAddress="#x1400" ControlByte="#x24" Enable="1">Outputs</Sm>
         <Sm StartAddress="#x1A00" ControlByte="#x20" Enable="1">Inputs</Sm>
         <RxPdo Fixed="true" Mandatory="true" Sm="2">
-          <Index>#x1400</Index>
+          <Index>#x1600</Index>
           <Name>Control Word</Name>
           <Entry>
             <Index>#x6040</Index>
@@ -1255,7 +1255,7 @@ const esi_xml =
           </Entry>
         </RxPdo>
         <RxPdo Fixed="true" Mandatory="true" Sm="2">
-          <Index>#x1401</Index>
+          <Index>#x1601</Index>
           <Name>Target position</Name>
           <Entry>
             <Index>#x607A</Index>

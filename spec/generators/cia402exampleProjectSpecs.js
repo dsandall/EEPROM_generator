@@ -408,7 +408,7 @@ describe("generators", function() {
                 </SubItem>
               </DataType>
               <DataType>
-                <Name>DT1400</Name>
+                <Name>DT1600</Name>
                 <BitSize>48</BitSize>
                 <SubItem>
                   <SubIdx>0</SubIdx>
@@ -432,7 +432,7 @@ describe("generators", function() {
                 </SubItem>
               </DataType>
               <DataType>
-                <Name>DT1401</Name>
+                <Name>DT1601</Name>
                 <BitSize>48</BitSize>
                 <SubItem>
                   <SubIdx>0</SubIdx>
@@ -886,9 +886,9 @@ describe("generators", function() {
                 </Flags>
               </Object>
               <Object>
-                <Index>#x1400</Index>
+                <Index>#x1600</Index>
                 <Name>Control Word</Name>
-                <Type>DT1400</Type>
+                <Type>DT1600</Type>
                 <BitSize>48</BitSize>
                 <Info>
                   <SubItem>
@@ -909,9 +909,9 @@ describe("generators", function() {
                 </Flags>
               </Object>
               <Object>
-                <Index>#x1401</Index>
+                <Index>#x1601</Index>
                 <Name>Target position</Name>
-                <Type>DT1401</Type>
+                <Type>DT1601</Type>
                 <BitSize>48</BitSize>
                 <Info>
                   <SubItem>
@@ -1033,13 +1033,13 @@ describe("generators", function() {
                   <SubItem>
                     <Name>PDO Mapping</Name>
                     <Info>
-                      <DefaultValue>#x1400</DefaultValue>
+                      <DefaultValue>#x1600</DefaultValue>
                     </Info>
                   </SubItem>
                   <SubItem>
                     <Name>PDO Mapping</Name>
                     <Info>
-                      <DefaultValue>#x1401</DefaultValue>
+                      <DefaultValue>#x1601</DefaultValue>
                     </Info>
                   </SubItem>
                 </Info>
@@ -1269,7 +1269,7 @@ describe("generators", function() {
         <Sm StartAddress="#x1400" ControlByte="#x24" Enable="1">Outputs</Sm>
         <Sm StartAddress="#x1A00" ControlByte="#x20" Enable="1">Inputs</Sm>
         <RxPdo Fixed="true" Mandatory="true" Sm="2">
-          <Index>#x1400</Index>
+          <Index>#x1600</Index>
           <Name>Control Word</Name>
           <Entry>
             <Index>#x6040</Index>
@@ -1280,7 +1280,7 @@ describe("generators", function() {
           </Entry>
         </RxPdo>
         <RxPdo Fixed="true" Mandatory="true" Sm="2">
-          <Index>#x1401</Index>
+          <Index>#x1601</Index>
           <Name>Target position</Name>
           <Entry>
             <Index>#x607A</Index>
@@ -1346,6 +1346,26 @@ describe("generators", function() {
       // assert
       const configData = `050600446400000000001A000000`;
       expect(result).toEqualLines(configData);
+    });
+
+    it("hex_generator should include SyncManager and PDO SII categories", function() {
+      const image = hex_generator(form, false, od);
+      const word = byteOffset => image[byteOffset] | (image[byteOffset + 1] << 8);
+      const categories = {};
+      let offset = 0x80;
+
+      while (word(offset) != 0xFFFF) {
+        const category = word(offset);
+        const lengthBytes = word(offset + 2) * 2;
+        categories[category] = offset + 4;
+        offset += 4 + lengthBytes;
+      }
+
+      const syncManagers = categories[0x29];
+      expect(word(syncManagers + 18)).toBe(6); // SM2: 16-bit + 32-bit RxPDOs
+      expect(word(syncManagers + 26)).toBe(6); // SM3: 16-bit + 32-bit TxPDOs
+      expect(word(categories[0x32])).toBe(0x1A00);
+      expect(word(categories[0x33])).toBe(0x1600);
     });
 
     it("ecat_options_generator should generate expected code", function() {
@@ -1428,12 +1448,12 @@ static const char acName10F1[] = "Error Settings";
 static const char acName10F1_00[] = "Max SubIndex";
 static const char acName10F1_01[] = "Local Error Reaction";
 static const char acName10F1_02[] = "SyncErrorCounterLimit";
-static const char acName1400[] = "Control Word";
-static const char acName1400_00[] = "Max SubIndex";
-static const char acName1400_01[] = "Control Word";
-static const char acName1401[] = "Target position";
-static const char acName1401_00[] = "Max SubIndex";
-static const char acName1401_01[] = "Target position";
+static const char acName1600[] = "Control Word";
+static const char acName1600_00[] = "Max SubIndex";
+static const char acName1600_01[] = "Control Word";
+static const char acName1601[] = "Target position";
+static const char acName1601_00[] = "Max SubIndex";
+static const char acName1601_01[] = "Target position";
 static const char acName1A00[] = "Status Word";
 static const char acName1A00_00[] = "Max SubIndex";
 static const char acName1A00_01[] = "Status Word";
@@ -1510,15 +1530,15 @@ const _objd SDO10F1[] =
   {0x01, DTYPE_UNSIGNED32, 32, ATYPE_RO, acName10F1_01, 0, &Obj.Error_Settings.Local_Error_Reaction},
   {0x02, DTYPE_UNSIGNED32, 32, ATYPE_RO, acName10F1_02, 200, &Obj.Error_Settings.SyncErrorCounterLimit},
 };
-const _objd SDO1400[] =
+const _objd SDO1600[] =
 {
-  {0x00, DTYPE_UNSIGNED8, 8, ATYPE_RO, acName1400_00, 1, NULL},
-  {0x01, DTYPE_UNSIGNED32, 32, ATYPE_RO, acName1400_01, 0x60400010, NULL},
+  {0x00, DTYPE_UNSIGNED8, 8, ATYPE_RO, acName1600_00, 1, NULL},
+  {0x01, DTYPE_UNSIGNED32, 32, ATYPE_RO, acName1600_01, 0x60400010, NULL},
 };
-const _objd SDO1401[] =
+const _objd SDO1601[] =
 {
-  {0x00, DTYPE_UNSIGNED8, 8, ATYPE_RO, acName1401_00, 1, NULL},
-  {0x01, DTYPE_UNSIGNED32, 32, ATYPE_RO, acName1401_01, 0x607A0020, NULL},
+  {0x00, DTYPE_UNSIGNED8, 8, ATYPE_RO, acName1601_00, 1, NULL},
+  {0x01, DTYPE_UNSIGNED32, 32, ATYPE_RO, acName1601_01, 0x607A0020, NULL},
 };
 const _objd SDO1A00[] =
 {
@@ -1541,8 +1561,8 @@ const _objd SDO1C00[] =
 const _objd SDO1C12[] =
 {
   {0x00, DTYPE_UNSIGNED8, 8, ATYPE_RO, acName1C12_00, 2, NULL},
-  {0x01, DTYPE_UNSIGNED16, 16, ATYPE_RO, acName1C12_01, 0x1400, NULL},
-  {0x02, DTYPE_UNSIGNED16, 16, ATYPE_RO, acName1C12_02, 0x1401, NULL},
+  {0x01, DTYPE_UNSIGNED16, 16, ATYPE_RO, acName1C12_01, 0x1600, NULL},
+  {0x02, DTYPE_UNSIGNED16, 16, ATYPE_RO, acName1C12_02, 0x1601, NULL},
 };
 const _objd SDO1C13[] =
 {
@@ -1606,8 +1626,8 @@ const _objectlist SDOobjects[] =
   {0x100A, OTYPE_VAR, 0, 0, acName100A, SDO100A},
   {0x1018, OTYPE_RECORD, 4, 0, acName1018, SDO1018},
   {0x10F1, OTYPE_RECORD, 2, 0, acName10F1, SDO10F1},
-  {0x1400, OTYPE_RECORD, 1, 0, acName1400, SDO1400},
-  {0x1401, OTYPE_RECORD, 1, 0, acName1401, SDO1401},
+  {0x1600, OTYPE_RECORD, 1, 0, acName1600, SDO1600},
+  {0x1601, OTYPE_RECORD, 1, 0, acName1601, SDO1601},
   {0x1A00, OTYPE_RECORD, 1, 0, acName1A00, SDO1A00},
   {0x1A01, OTYPE_RECORD, 1, 0, acName1A01, SDO1A01},
   {0x1C00, OTYPE_ARRAY, 4, 0, acName1C00, SDO1C00},

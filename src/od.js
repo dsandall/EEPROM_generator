@@ -111,11 +111,17 @@ function isPdoWithVariables(od, indexes, pdoName) {
 	}
 	return false;
 }
-/** Regardles of value set, SDK was generating RXPDO mappings as SDO1400
- * This offset _can_ be changed, not sure why one would need it
+/**
+ * PDO mapping objects live in the CoE object dictionary. Their indexes are
+ * independent of the physical ESC DPRAM addresses configured for SM2/SM3.
+ * This generator assigns PDOs consecutively from the standard EtherCAT bases.
  */
-function getSM2_MappingOffset(form) {
-	return	parseInt(form.SM2Offset.value);
+function getRxPdoMappingOffset() {
+	return 0x1600;
+}
+
+function getTxPdoMappingOffset() {
+	return 0x1A00;
 }
 /** Takes OD entries from UI RXPDO section and adds to given OD */
 function addRXPDOitems(form, odSections, od, booleanPaddingCount) {
@@ -123,7 +129,7 @@ function addRXPDOitems(form, odSections, od, booleanPaddingCount) {
 	const pdo = {
 		name : rxpdo,
 		SMassignmentIndex : '1C12',
-		smOffset : getSM2_MappingOffset(form), // usually 0x1400
+		smOffset : getRxPdoMappingOffset(form),
 	};
 	return addPdoObjectsSection(od, rxpdoSection, pdo, booleanPaddingCount);
 }
@@ -133,7 +139,7 @@ function addTXPDOitems(form, odSections, od, booleanPaddingCount) {
 	const pdo = {
 		name : txpdo,
 		SMassignmentIndex : '1C13',
-		smOffset : parseInt(form.SM3Offset.value), // usually 0x1A00
+		smOffset : getTxPdoMappingOffset(form),
 	};
 	return addPdoObjectsSection(od, txpdoSection, pdo, booleanPaddingCount);
 }
