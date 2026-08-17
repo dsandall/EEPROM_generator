@@ -43,6 +43,7 @@ function downloadGeneratedFilesZipped(result, projectName) {
 	zip.file('ecat_options.h', result.ecat_options.value);
 	zip.file('objectlist.c', result.objectlist.value);
 	zip.file('utypes.h', result.utypes.value);
+	zip.file('utypes.rs', result.rust_utypes.value);
 	zip.file('esi.json', result.backupJson);
 
 	zip.generateAsync({type:"blob"}).then(function (blob) { // generate the zip file
@@ -59,5 +60,6 @@ function downloadGeneratedFiles(result, projectName) {
 	downloadFile(result.ecat_options.value, 'ecat_options.h', 'text/plain');
 	downloadFile(result.objectlist.value, 'objectlist.c', 'text/plain');
 	downloadFile(result.utypes.value, 'utypes.h', 'text/plain');
+	downloadFile(result.rust_utypes.value, 'utypes.rs', 'text/plain');
 	downloadBackupFile(result.backupJson);
 }

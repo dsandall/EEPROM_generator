@@ -31,6 +31,7 @@ Object.assign(globalThis, jasmineRequire.interface(jasmineCore, env));
 	'src/generators/ecat_options.js',
 	'src/generators/objectlist.js',
 	'src/generators/utypes.js',
+	'src/generators/rust_utypes.js',
 	'spec/helpers/customMatchers.js',
 	'spec/helpers/formMockHelper.js',
 	'spec/backupSpecs.js',

@@ -24,7 +24,8 @@
    <script src="src/generators/EEPROM.js"></script>
    <script src="src/generators/esi_xml.js"></script>
    <script src="src/generators/objectlist.js"></script>
-   <script src="src/generators/utypes.js"></script>   
+   <script src="src/generators/utypes.js"></script>
+   <script src="src/generators/rust_utypes.js"></script>
    
    <script src="src/ui.js"></script>
    
@@ -428,6 +429,13 @@
          </button>
          <br>
          <textarea cols = "150" rows = "12" name="utypes">utypes.h</textarea><br><br>
+         utypes.rs:
+         <button name="Download_rust_utypes"
+            onClick="downloadFile(getOutputForm().rust_utypes.value, fileName = 'utypes.rs', contentType = 'text/plain');">
+            🔽 &nbsp; Download &nbsp;
+         </button>
+         <br>
+         <textarea cols = "150" rows = "12" name="rust_utypes">utypes.rs</textarea><br><br>
          <input id="restoreFileInput" type='file' accept=".json" style="visibility:hidden;" onchange="readFile(event)" />
       </form>
    </div>

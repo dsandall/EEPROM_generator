@@ -1368,6 +1368,13 @@ describe("generators", function() {
       expect(word(categories[0x33])).toBe(0x1600);
     });
 
+    it("rust_utypes_generator should expose the generated object layout", function() {
+      const result = rust_utypes_generator(form, od, indexes);
+      expect(result).toContain("pub status_word: u16");
+      expect(result).toContain("pub control_word: u16");
+      expect(result).toContain("pub static mut Obj: Objects");
+    });
+
     it("ecat_options_generator should generate expected code", function() {
       // arrange
       // act

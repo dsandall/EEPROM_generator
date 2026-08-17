@@ -9,7 +9,8 @@ You can configure:
 - OD (CANopen Object Dictionary) entries
 - PDO mappings (which OD objects are mapped in TX, RX datagrams)
 
-Tool generates consistent data across C sources, ESI file and EEPROM content.
+Tool generates consistent data across C and Rust object layouts, ESI file and
+EEPROM content.
 
 It also backs up your current project in localstorage. You can save project to JSON file on your hard drive, restore from it later, and download all files at once.
 
