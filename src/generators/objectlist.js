@@ -125,7 +125,7 @@ function objectlist_generator(form, od, indexes)
 				objd.items.slice(subindex).forEach(subitem => {
 					let subi = subindex_padded(subindex);
 					const value = objectlist_getItemValue(subitem, objd.dtype);
-					objectlist += `\n  {0x${subi}, DTYPE_${objd.dtype}, ${bitsize}, ${objectlist_objdFlags(objd)}, acName${index}_${subi}, ${value}, ${subitem.data || 'NULL'}},`;
+					objectlist += `\n  {${subindex_hex(subindex)}, DTYPE_${objd.dtype}, ${bitsize}, ${objectlist_objdFlags(objd)}, acName${index}_${subi}, ${value}, ${subitem.data || 'NULL'}},`;
 					subindex++;
 				});
 				break;
@@ -138,7 +138,7 @@ function objectlist_generator(form, od, indexes)
 					const bitsize = dtype_bitsize[subitem.dtype];
 					const value = objectlist_getItemValue(subitem, subitem.dtype);
 					const atypeflag = objectlist_objdFlags(subitem);
-					objectlist += `\n  {0x${subi}, DTYPE_${subitem.dtype}, ${bitsize}, ${atypeflag}, acName${index}_${subi}, ${value}, ${subitem.data || 'NULL'}},`;
+					objectlist += `\n  {${subindex_hex(subindex)}, DTYPE_${subitem.dtype}, ${bitsize}, ${atypeflag}, acName${index}_${subi}, ${value}, ${subitem.data || 'NULL'}},`;
 					subindex++;
 				});
 
@@ -193,6 +193,12 @@ function objectlist_generator(form, od, indexes)
 			}				
 		}
 		return value;
+	}
+
+	// The subindex as a C hex literal. subindex_padded is decimal and only fit
+	// for identifiers: prefixing it with 0x turns subindex 10 into 0x10.
+	function subindex_hex(subindex) {
+		return `0x${subindex.toString(16).padStart(2, '0')}`;
 	}
 
 	function subindex_padded(subindex) {
