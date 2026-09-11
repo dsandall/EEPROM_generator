@@ -179,9 +179,9 @@ function esi_generator(form, od, indexes, dc)
 	//Add Txmailbox sizes
 	esi += `        <Sm DefaultSize="${parseInt(form.MailboxSize.value).toString(10)}" StartAddress="#x${indexToString(form.TxMailboxOffset.value)}" ControlByte="#x22" Enable="1">MBoxIn</Sm>\n`;
 	//Add SM2
-	esi += `        <Sm StartAddress="#x${indexToString(form.SM2Offset.value)}" ControlByte="#x24" Enable="${is_rxpdo ? 1 : 0}">Outputs</Sm>\n`;
+	esi += `        <Sm ${smDefaultSize(od, '1C12')}StartAddress="#x${indexToString(form.SM2Offset.value)}" ControlByte="#x64" Enable="${is_rxpdo ? 1 : 0}">Outputs</Sm>\n`;
 	//Add SM3
-	esi += `        <Sm StartAddress="#x${indexToString(form.SM3Offset.value)}" ControlByte="#x20" Enable="${is_txpdo ? 1 : 0}">Inputs</Sm>\n`;
+	esi += `        <Sm ${smDefaultSize(od, '1C13')}StartAddress="#x${indexToString(form.SM3Offset.value)}" ControlByte="#x20" Enable="${is_txpdo ? 1 : 0}">Inputs</Sm>\n`;
 	if (is_rxpdo) {
 		let memOffset = getRxPdoMappingOffset(form);
 		indexes.forEach(index => {
@@ -214,11 +214,38 @@ function esi_generator(form, od, indexes, dc)
 	esi += getEsiDCsection(dc);
 	//Add EEPROM
 	const configdata = hex_generator(form, true);
-	esi +=`        <Eeprom>\n          <ByteSize>${parseInt(form.EEPROMsize.value)}</ByteSize>\n          <ConfigData>${configdata}</ConfigData>\n        </Eeprom>\n`;
+	esi +=`        <Eeprom>\n          <ByteSize>${parseInt(form.EEPROMsize.value)}</ByteSize>\n          <ConfigData>${configdata}</ConfigData>\n`;
+	if (form.DetailsEnableUseFoE.checked) {
+		// SII words 0x14..0x17: the bootstrap mailbox the device uses in BOOT state
+		esi +=`          <BootStrap>${getBootStrapString(form)}</BootStrap>\n`;
+	}
+	esi +=`        </Eeprom>\n`;
 	//Close all items
 	esi +=`      </Device>\n    </Devices>\n  </Descriptions>\n</EtherCATInfo>`;
 
 	return esi;	
+
+	/** DefaultSize attribute for a process data SyncManager: the byte length of
+	 * every PDO assigned to it, the same sum the SII SyncManager category
+	 * carries. Empty when nothing is assigned, so the attribute is omitted. */
+	function smDefaultSize(od, assignmentIndex) {
+		if (!od || !od[assignmentIndex]) {
+			return '';
+		}
+		const bits = od[assignmentIndex].items.slice(1).reduce((total, assignment) => {
+			const mapping = od[indexToString(parseInt(assignment.value))];
+			if (!mapping) {
+				return total;
+			}
+			return total + mapping.items.slice(1).reduce((pdoTotal, item) => pdoTotal + (parseInt(item.value) & 0xFF), 0);
+		}, 0);
+		return bits > 0 ? `DefaultSize="${Math.ceil(bits / 8)}" ` : '';
+	}
+
+	function getBootStrapString(form) {
+		const words = [form.RxMailboxOffset.value, form.MailboxSize.value, form.TxMailboxOffset.value, form.MailboxSize.value];
+		return words.map(w => { const v = parseInt(w); return ((v & 0xFF) + 0x100).toString(16).slice(-2) + (((v >> 8) & 0xFF) + 0x100).toString(16).slice(-2); }).join('').toUpperCase();
+	}
 
 	function addEsiDevicePDO(objd, index, pdo, memOffset) {
 		let esi = '';

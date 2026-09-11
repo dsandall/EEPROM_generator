@@ -258,7 +258,7 @@ function hex_generator(form, stringOnly=false, od=null)
 		offset += 2;
 		writeEEPROMword_wordaddress(getPdoByteSize(rxPdos),offset/2, record); //Physical size
 		offset += 2;
-		writeEEPROMbyte_byteaddress(0x24,offset++, record); //Mode of operation
+		writeEEPROMbyte_byteaddress(0x64,offset++, record); //Mode of operation: buffered, ECAT write, PDI IRQ, watchdog trigger
 		writeEEPROMbyte_byteaddress(0,offset++, record); //don't care
 		writeEEPROMbyte_byteaddress(1,offset++, record); //Enable Syncmanager; bit0: enable, bit 1: fixed content, bit 2: virtual SyncManager, bit 3: Op Only
 		writeEEPROMbyte_byteaddress(3,offset++, record); //SyncManagerType; 0: not used, 1: Mbx out, 2: Mbx In, 3: PDO, 4: PDI
@@ -475,7 +475,7 @@ function hex_generator(form, stringOnly=false, od=null)
 
 	/** takes bytes array and count, returns ConfigData string */
 	function getConfigDataString(record, esc) {
-		const configdata_bytecount = configOnReservedBytes.has(esc) ? 14 : 7;
+		const configdata_bytecount = configOnReservedBytes.has(esc) ? 14 : 8;
 
 		let configdata = '';
 		for (let bytecount = 0; bytecount < configdata_bytecount; bytecount++) {

@@ -43,7 +43,7 @@ function ecat_options_generator(form, od, indexes)
 				+ '\n#define MBX1_smc_b       0x22\n\n';
 	//SyncManager2 Config
 	ecat_options += `#define SM2_sma          0x${indexToString(form.SM2Offset.value)}`
-				+ '\n#define SM2_smc          0x24' 
+				+ '\n#define SM2_smc          0x64' 
 				+ '\n#define SM2_act          1\n';
 	//SyncManager3 Config
 	ecat_options += `#define SM3_sma          0x${indexToString(form.SM3Offset.value)}`
