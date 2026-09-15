@@ -218,9 +218,6 @@ function esi_generator(form, od, indexes, dc)
 		// SII words 0x14..0x17: the bootstrap mailbox the device uses in BOOT state
 		esi +=`          <BootStrap>${getBootStrapString(form)}</BootStrap>\n`;
 	}
-	// The whole SII image, so a master or the CTT can compare the device's
-	// EEPROM with what the ESI says it should hold
-	esi +=`          <Data>${getEepromDataString(form, od)}</Data>\n`;
 	esi +=`        </Eeprom>\n`;
 	//Close all items
 	esi +=`      </Device>\n    </Devices>\n  </Descriptions>\n</EtherCATInfo>`;
@@ -262,22 +259,18 @@ function esi_generator(form, od, indexes, dc)
 		if (!controller) {
 			return '';
 		}
+		// ETG.2000 InfoType order: EtherCATController before the Port elements,
+		// and DpramSize, SmCount, FmmuCount inside it.
 		let result = `        <Info>\n`;
+		result += `          <EtherCATController>\n            <DpramSize>${controller.DpramSize}</DpramSize>\n            <SmCount>${controller.SmCount}</SmCount>\n            <FmmuCount>${controller.FmmuCount}</FmmuCount>\n          </EtherCATController>\n`;
 		physics.split('').forEach((letter, n) => {
 			const type = portTypes[letter];
 			if (type) {
 				result += `          <Port>\n            <Type>${type}</Type>\n            <Label>Port ${n}</Label>\n          </Port>\n`;
 			}
 		});
-		result += `          <EtherCATController>\n            <DpramSize>${controller.DpramSize}</DpramSize>\n            <FmmuCount>${controller.FmmuCount}</FmmuCount>\n            <SmCount>${controller.SmCount}</SmCount>\n          </EtherCATController>\n`;
 		result += `        </Info>\n`;
 		return result;
-	}
-
-	/** The SII image as the ESI Eeprom:Data hex string. */
-	function getEepromDataString(form, od) {
-		const bytes = hex_generator(form, false, od);
-		return Array.from(bytes, b => (b + 0x100).toString(16).slice(-2)).join('').toUpperCase();
 	}
 
 	function getBootStrapString(form) {
