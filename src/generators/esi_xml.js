@@ -241,18 +241,19 @@ function esi_generator(form, od, indexes, dc)
 		return bits > 0 ? `DefaultSize="${Math.ceil(bits / 8)}" ` : '';
 	}
 
-	/** ETG.2000 Device:Info: the ESC's DPRAM size in KiB, FMMU and SyncManager
-	 * counts as its registers 0x0004..0x0006 report them, and one Port per
-	 * physical port with its type from the Physics letter (register 0x0007).
-	 * Only for ESCs whose figures are known; otherwise nothing, and the CTT
-	 * skips the comparison as it did before. */
+	/** ETG.2000 Device:Info: the ESC's DPRAM size in bytes (its register
+	 * 0x0006 holds KiB; the CTT divides by 1024), FMMU and SyncManager counts
+	 * as registers 0x0004 and 0x0005 report them, and one Port per physical
+	 * port with its type from the Physics letter (register 0x0007). Only for
+	 * ESCs whose figures are known; otherwise nothing, and the CTT skips the
+	 * comparison as it did before. */
 	function getEsiInfoSection(form, physics) {
 		const controllers = {
-			'LAN9252':          { DpramSize: 4, FmmuCount: 3, SmCount: 4 },
-			'LAN9253_Beckhoff': { DpramSize: 4, FmmuCount: 3, SmCount: 4 },
-			'LAN9253_Direct':   { DpramSize: 4, FmmuCount: 3, SmCount: 4 },
-			'LAN9253_Indirect': { DpramSize: 4, FmmuCount: 3, SmCount: 4 },
-			'ET1100':           { DpramSize: 8, FmmuCount: 8, SmCount: 8 },
+			'LAN9252':          { DpramSize: 4096, FmmuCount: 3, SmCount: 4 },
+			'LAN9253_Beckhoff': { DpramSize: 4096, FmmuCount: 3, SmCount: 4 },
+			'LAN9253_Direct':   { DpramSize: 4096, FmmuCount: 3, SmCount: 4 },
+			'LAN9253_Indirect': { DpramSize: 4096, FmmuCount: 3, SmCount: 4 },
+			'ET1100':           { DpramSize: 8192, FmmuCount: 8, SmCount: 8 },
 		};
 		const portTypes = { 'Y': 'MII', 'K': 'EBUS', 'H': 'MII' };
 		const controller = controllers[form.ESC.value];
