@@ -109,13 +109,7 @@ function esi_generator(form, od, indexes, dc)
 		return result;
 
 		function getSubitemFlags(objd, subitem) {
-			let access = 'ro';
-			let modifier = '';
-			if (subitem.access) {
-				access = subitem.access.slice(0,2).toLowerCase();
-				modifier = ' WriteRestrictions="PreOP"';
-			}
-			let flags = `\n                    <Access${modifier}>${access}</Access>`; // PDO assign flags for variables are set in dictionary objects section
+			let flags = esiAccessFlag(subitem.access, '                    '); // PDO assign flags for variables are set in dictionary objects section
 			flags += getPdoMappingFlags(objd); // PDO assign flags for composite type
 			return flags;
 		}
@@ -147,7 +141,7 @@ function esi_generator(form, od, indexes, dc)
 			result += addDictionaryObjectSubitems(objd.items);
 		}
 	
-		let flags = `\n                  <Access>ro</Access>`;
+		let flags = esiAccessFlag(objd.access, '                  ');
 		if (objd.otype == OTYPE.VAR) {
 			flags += getPdoMappingFlags(objd);
 		}
@@ -308,6 +302,19 @@ function esi_generator(form, od, indexes, dc)
 			value = `#x${value.slice(2)}`;
 		}
 		return value;
+	}
+
+	/** The ESI Access flag for an objectlist access type: RO, RW and WO map
+	 * to ro, rw and wo; the state-restricted RWpre and RWop keep rw and say
+	 * which state writes are allowed in. Anything unset is read-only. */
+	function esiAccessFlag(access, indent) {
+		const atype = access || 'RO';
+		const base = atype.slice(0, 2).toLowerCase();
+		let modifier = '';
+		if (atype == 'RWpre') { modifier = ' WriteRestrictions="PreOP"'; }
+		else if (atype == 'RWop') { modifier = ' WriteRestrictions="OP"'; }
+		else if (atype == 'RWpre_safe') { modifier = ' WriteRestrictions="PreOP SafeOP"'; }
+		return `\n${indent}<Access${modifier}>${base}</Access>`;
 	}
 
 	function getPdoMappingFlags(item) {
