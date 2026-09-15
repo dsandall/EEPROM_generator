@@ -22,10 +22,15 @@ function esi_generator(form, od, indexes, dc)
 	esi += `    <Name LcId="1033">${form.VendorName.value}</Name>\n  </Vendor>\n  <Descriptions>\n`;
 	//Groups
 	esi += `    <Groups>\n      <Group>\n        <Type>${form.TextGroupType.value}</Type>\n        <Name LcId="1033">${form.TextGroupName5.value}</Name>\n      </Group>\n    </Groups>\n    <Devices>\n`;
-	//Physics  
-	esi += `      <Device Physics="${form.Port0Physical.value + form.Port1Physical.value + form.Port2Physical.value || + form.Port3Physical.value}">\n        <Type ProductCode="#x${parseInt(form.ProductCode.value).toString(16)}" RevisionNo="#x${parseInt(form.RevisionNumber.value).toString(16)}">${form.TextDeviceType.value}</Type>\n`;
+	//Physics: one letter per port, ETG.1000.6 Table 21, trailing unused ports dropped
+	const physics = [form.Port0Physical.value, form.Port1Physical.value, form.Port2Physical.value, form.Port3Physical.value]
+		.map(p => p || ' ').join('').replace(/\s+$/, '');
+	esi += `      <Device Physics="${physics}">\n        <Type ProductCode="#x${parseInt(form.ProductCode.value).toString(16)}" RevisionNo="#x${parseInt(form.RevisionNumber.value).toString(16)}">${form.TextDeviceType.value}</Type>\n`;
 	//Add  Name info
 	esi += `        <Name LcId="1033">${form.TextDeviceName.value}</Name>\n`;
+	//What the ESC is and which ports it has, for the CTT's comparison of the
+	//ESI with the ESC's own registers (0x0004..0x0007)
+	esi += getEsiInfoSection(form, physics);
 	//Add in between
 	esi += `        <GroupType>${form.TextGroupType.value}</GroupType>\n`;
 	//Add profile
@@ -213,6 +218,9 @@ function esi_generator(form, od, indexes, dc)
 		// SII words 0x14..0x17: the bootstrap mailbox the device uses in BOOT state
 		esi +=`          <BootStrap>${getBootStrapString(form)}</BootStrap>\n`;
 	}
+	// The whole SII image, so a master or the CTT can compare the device's
+	// EEPROM with what the ESI says it should hold
+	esi +=`          <Data>${getEepromDataString(form, od)}</Data>\n`;
 	esi +=`        </Eeprom>\n`;
 	//Close all items
 	esi +=`      </Device>\n    </Devices>\n  </Descriptions>\n</EtherCATInfo>`;
@@ -234,6 +242,42 @@ function esi_generator(form, od, indexes, dc)
 			return total + mapping.items.slice(1).reduce((pdoTotal, item) => pdoTotal + (parseInt(item.value) & 0xFF), 0);
 		}, 0);
 		return bits > 0 ? `DefaultSize="${Math.ceil(bits / 8)}" ` : '';
+	}
+
+	/** ETG.2000 Device:Info: the ESC's DPRAM size in KiB, FMMU and SyncManager
+	 * counts as its registers 0x0004..0x0006 report them, and one Port per
+	 * physical port with its type from the Physics letter (register 0x0007).
+	 * Only for ESCs whose figures are known; otherwise nothing, and the CTT
+	 * skips the comparison as it did before. */
+	function getEsiInfoSection(form, physics) {
+		const controllers = {
+			'LAN9252':          { DpramSize: 4, FmmuCount: 3, SmCount: 4 },
+			'LAN9253_Beckhoff': { DpramSize: 4, FmmuCount: 3, SmCount: 4 },
+			'LAN9253_Direct':   { DpramSize: 4, FmmuCount: 3, SmCount: 4 },
+			'LAN9253_Indirect': { DpramSize: 4, FmmuCount: 3, SmCount: 4 },
+			'ET1100':           { DpramSize: 8, FmmuCount: 8, SmCount: 8 },
+		};
+		const portTypes = { 'Y': 'MII', 'K': 'EBUS', 'H': 'MII' };
+		const controller = controllers[form.ESC.value];
+		if (!controller) {
+			return '';
+		}
+		let result = `        <Info>\n`;
+		physics.split('').forEach((letter, n) => {
+			const type = portTypes[letter];
+			if (type) {
+				result += `          <Port>\n            <Type>${type}</Type>\n            <Label>Port ${n}</Label>\n          </Port>\n`;
+			}
+		});
+		result += `          <EtherCATController>\n            <DpramSize>${controller.DpramSize}</DpramSize>\n            <FmmuCount>${controller.FmmuCount}</FmmuCount>\n            <SmCount>${controller.SmCount}</SmCount>\n          </EtherCATController>\n`;
+		result += `        </Info>\n`;
+		return result;
+	}
+
+	/** The SII image as the ESI Eeprom:Data hex string. */
+	function getEepromDataString(form, od) {
+		const bytes = hex_generator(form, false, od);
+		return Array.from(bytes, b => (b + 0x100).toString(16).slice(-2)).join('').toUpperCase();
 	}
 
 	function getBootStrapString(form) {
